@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KAI Coffee</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#FCF7F1">
+<style>html,body{margin:0;height:100%;background:#FCF7F1;color:#17150F;display:grid;place-items:center;font:400 15px/1.6 -apple-system,BlinkMacSystemFont,system-ui,sans-serif}a{color:#5E7360}</style>
+<script>
+  // Hash routing lives at the root; anything else bounces home and keeps the path
+  // as a hash so a shared /menu link still lands on the menu.
+  var p = location.pathname.replace(/^\/kai\/?/, "/").replace(/\/+$/, "") || "/";
+  location.replace(location.pathname.indexOf("/kai") === 0 ? "/kai/#" + p : "/#" + p);
+</script>
+<p>Taking you to <a href="./">KAI Coffee</a>…</p>
