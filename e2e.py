@@ -97,7 +97,7 @@ def main():
     check("viewport-fit cover for the notch", "viewport-fit=cover" in html)
     check("scrollRestoration claimed in head", "scrollRestoration" in html.split("<body")[0])
     check("theme applied in <head>, before the first paint", 'localStorage.getItem("kai.v1.theme")' in html.split("<body")[0])
-    check("opening inlined: coffee-filled mark and KAI's wordmark", 'class="boot-liquid"' in html and html.count('class="wl"') == 9)
+    check("opening inlined: their logo, the ampersand over the wordmark", 'class="boot-mark"' in html and html.count('class="wl"') == 9 and "boot-liquid" not in html and "boot-stream" not in html)
     check("no secrets in shipped js", not re.search(r"(sk_live|api[_-]?key\s*[:=]\s*['\"][A-Za-z0-9]{12,})", http(BASE + "js/config.js")[2].decode()))
     data_js = http(BASE + "js/data.js")[2].decode("utf-8")
     check("data.js: 112 visible items", data_js.count('"cat":') == 112, str(data_js.count('"cat":')))
@@ -117,7 +117,8 @@ def main():
 
         page.goto(BASE + ("" if LIVE else "?nosw") + "#/", wait_until="load")
         page.wait_for_timeout(600)
-        check("opening is pouring at 0.6 s", page.evaluate("!!document.getElementById('boot')"))
+        check("opening shows their logo at 0.6 s", page.evaluate("!!document.getElementById('boot')"))
+        check("the logo holds still: nothing on it animates (the screen's own fade is the only motion)", page.evaluate("(() => { const l = document.querySelector('#boot .boot-logo'); return !l || l.getAnimations({ subtree: true }).length === 0; })()"))
         import time as _t
         t_boot = _t.time()
         try:
@@ -125,7 +126,7 @@ def main():
         except Exception:
             pass
         waited = _t.time() - t_boot + 0.6
-        check("opening hands over to the bar and leaves", page.evaluate("!document.getElementById('boot') && !document.documentElement.classList.contains('booting')"), f"still up after {waited:.1f}s")
+        check("opening fades and leaves", page.evaluate("!document.getElementById('boot') && !document.documentElement.classList.contains('booting')"), f"still up after {waited:.1f}s")
         check("opening lasts under 4.5 s from load", waited < 4.5, f"{waited:.1f}s")
         page.wait_for_timeout(300)
         check("bar carries KAI's own wordmark", page.locator("#bar-word svg .wl").count() == 9)

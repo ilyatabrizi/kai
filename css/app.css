@@ -269,41 +269,16 @@ h1, h2, h3, h4, p, figure, figcaption { margin: 0; }
 .dock-sum { margin-left: auto; margin-right: 12px; font: 600 15px/1 var(--sans); opacity: .9; }
 
 /* ------------------------------------------------------------------- boot */
-/* The opening. Coffee pours into the ampersand and fills it — all CSS, so it runs
-   from the first paint. js/boot.js waits for the page, tops the cup up, and flies
-   the mark to the bar while the paper closes in around it. */
+/* The opening: their logo, still, on paper — the ampersand over the wordmark —
+   until the page behind is ready; then a plain fade. */
 html.booting { overflow: hidden; }
-html.booting #bar-mark { opacity: 0; }
-#boot { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; }
-.boot-bg { position: absolute; inset: 0; background: var(--paper); }
-.boot-stage { position: relative; display: grid; justify-items: center; gap: 28px; margin-top: -4vh; }
-.boot-glyph { position: relative; width: 104px; color: var(--ink); will-change: transform; }
-.boot-mark { display: block; width: 100%; height: auto; }
-.boot-ghost { fill: currentColor; opacity: .08; transition: opacity .3s; }
-.boot-liquid { fill: var(--pour); }
-.boot-crema { fill: none; stroke: var(--crema); stroke-width: 30; }
-.boot-solid { fill: currentColor; opacity: 0; transition: opacity .32s .1s var(--ease-out); }
-.boot-level { transform: translateY(1345px); animation: bootRise .96s .22s cubic-bezier(.45, .05, .35, 1) forwards; }
-.boot-wave { animation: bootWave 1.15s linear infinite; }
-.boot-stream { position: absolute; left: 50%; bottom: 7%; width: 3px; height: calc(100% + 112px); margin-left: -1.5px; border-radius: 3px;
-  background: var(--pour); transform-origin: 50% 0; transform: scaleY(0); animation: bootPour .34s cubic-bezier(.55, 0, .8, .2) forwards; }
-.boot-word { display: block; width: 172px; height: auto; color: var(--ink); transition: opacity .24s, transform .24s var(--ease-out); }
-.boot-word .wl { transform-box: fill-box; transform-origin: 50% 100%; opacity: 0; transform: translateY(80%);
-  animation: bootLetter .62s calc(.6s + var(--i) * 48ms) cubic-bezier(.2, .8, .2, 1) forwards; }
-#boot.full .boot-level { animation: bootTop .42s cubic-bezier(.3, .7, .3, 1) forwards; }
-#boot.full .boot-stream { transform-origin: 50% 100%; animation: bootCut .3s cubic-bezier(.5, 0, .75, 0) forwards; }
-#boot.full .boot-solid { opacity: 1; }
-#boot.full .boot-ghost { opacity: 0; }
-#boot.exit .boot-word { opacity: 0; transform: translateY(10px); }
-#boot.gone { opacity: 0; transition: opacity .42s var(--ease-out); }
-/* a reload in the same session: the cup is already full */
-.boot-warm .boot-level, .boot-still .boot-level { animation: none; transform: translateY(-90px); }
-.boot-warm .boot-stream, .boot-still .boot-stream { display: none; }
-.boot-warm .boot-solid, .boot-still .boot-solid { opacity: 1; transition: none; }
-.boot-warm .boot-ghost, .boot-still .boot-ghost { opacity: 0; }
-.boot-warm .boot-word .wl { animation-delay: calc(var(--i) * 28ms); animation-duration: .4s; }
-.boot-still .boot-word .wl { animation: none; opacity: 1; transform: none; }
-@media (min-width: 720px) { .boot-glyph { width: 120px; } .boot-word { width: 200px; } }
+#boot { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--paper); color: var(--ink);
+  transition: opacity .4s var(--ease-out), visibility 0s .4s; }
+#boot.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+.boot-logo { display: grid; justify-items: center; gap: 26px; margin-top: -4vh; }
+.boot-mark { display: block; width: 104px; height: auto; }
+.boot-word { display: block; width: 172px; height: auto; }
+@media (min-width: 720px) { .boot-mark { width: 120px; } .boot-word { width: 200px; } }
 
 /* ---------------------------------------------------------------- buttons */
 .btn {
@@ -836,12 +811,6 @@ img.imgload.ready { opacity: 1; }
 @keyframes tabPop { 0% { transform: scale(.8); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
 @keyframes pop { 0% { transform: scale(.85); } 55% { transform: scale(1.12); } 100% { transform: scale(1); } }
 @keyframes dockIn { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: none; } }
-@keyframes bootRise { from { transform: translateY(1345px); } to { transform: translateY(190px); } }
-@keyframes bootTop { from { transform: translateY(190px); } to { transform: translateY(-90px); } }
-@keyframes bootWave { to { transform: translateX(-500px); } }
-@keyframes bootPour { to { transform: scaleY(1); } }
-@keyframes bootCut { from { transform: scaleY(1); } to { transform: scaleY(0); } }
-@keyframes bootLetter { to { opacity: 1; transform: none; } }
 @keyframes toastIn { from { opacity: 0; transform: translateY(14px) scale(.94); } to { opacity: 1; transform: none; } }
 @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateY(8px) scale(.96); } }
 @keyframes pulse { 0% { opacity: .7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.55); } }

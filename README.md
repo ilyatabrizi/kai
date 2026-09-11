@@ -70,11 +70,9 @@ glosses in IRANYekanX FaNum. Light by default, because the brand is paper; a war
 espresso dark mode (not grey) in You → Settings → Appearance, or taken from the phone.
 The physical cards — loyalty, member, order code — stay dark in both.
 
-**The opening.** Coffee (their own `--kai-coffee` brown) pours into the ampersand and
-fills it; their real wordmark rises beneath; when the page behind is ready the mark flies
-into the top bar while the paper closes in around it. Inlined into index.html by
-build.py so it starts with the first paint. ≈2 s cold, ≈0.9 s on a reload, a still frame
-under Reduce Motion.
+**The opening.** Their logo, still — the ampersand over their wordmark — on
+paper until the page behind is ready, then a plain fade. No animation, by request
+(2026-09-12). build.py inlines the markup, so the logo shows with the first paint.
 
 **Check-in.** The branch is a card with its own illustration, live headcount and faces.
 Tap the cup: it fills with the house olive, the hour ring draws, confetti in the colours
