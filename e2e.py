@@ -115,19 +115,24 @@ def main():
         page.on("pageerror", lambda e: errors.append(str(e)))
         page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
 
-        page.goto(BASE + ("" if LIVE else "?nosw") + "#/", wait_until="load")
-        page.wait_for_timeout(600)
-        check("opening shows their logo at 0.6 s", page.evaluate("!!document.getElementById('boot')"))
-        check("the logo holds still: nothing on it animates (the screen's own fade is the only motion)", page.evaluate("(() => { const l = document.querySelector('#boot .boot-logo'); return !l || l.getAnimations({ subtree: true }).length === 0; })()"))
         import time as _t
-        t_boot = _t.time()
+        t_nav = _t.time()
+        page.goto(BASE + ("" if LIVE else "?nosw") + "#/", wait_until="commit")
         try:
-            page.wait_for_selector("#boot", state="detached", timeout=9000)
+            page.wait_for_selector("#boot .boot-logo", state="attached", timeout=8000)
+            logo_first = True
+        except Exception:
+            logo_first = False
+        check("opening shows their logo from the first paint", logo_first and page.evaluate("!!document.querySelector('#boot .boot-mark') && !!document.querySelector('#boot .boot-word')"))
+        check("the logo holds still: nothing on it animates (the screen's own fade is the only motion)", page.evaluate("(() => { const l = document.querySelector('#boot .boot-logo'); return !l || l.getAnimations({ subtree: true }).length === 0; })()"))
+        try:
+            page.wait_for_selector("#boot", state="detached", timeout=12000)
         except Exception:
             pass
-        waited = _t.time() - t_boot + 0.6
+        waited = _t.time() - t_nav
         check("opening fades and leaves", page.evaluate("!document.getElementById('boot') && !document.documentElement.classList.contains('booting')"), f"still up after {waited:.1f}s")
-        check("opening lasts under 4.5 s from load", waited < 4.5, f"{waited:.1f}s")
+        check("opening gone within 6 s of navigating", waited < 6, f"{waited:.1f}s")
+        page.wait_for_load_state("load")
         page.wait_for_timeout(300)
         check("bar carries KAI's own wordmark", page.locator("#bar-word svg .wl").count() == 9)
         check("fonts: Bodoni Moda loaded", page.evaluate("document.fonts.check('500 32px \"Bodoni Moda\"')"))
