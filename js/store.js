@@ -3,7 +3,7 @@
 // server yet; the shape is what a server would hold.
 
 import { STORAGE, LOYALTY, ORDER } from "./config.js";
-import { uid, rng, hash32 } from "./util.js";
+import { uid, rng, hash32, hueOf, dotted } from "./util.js";
 import { byId, LEAGUES, BRANCHES, ITEMS } from "./data.js";
 
 const KEY = {
@@ -12,6 +12,7 @@ const KEY = {
   orders: STORAGE + "orders",
   member: STORAGE + "member",
   prefs: STORAGE + "prefs",
+  photo: STORAGE + "photo",
 };
 
 const read = (key, fallback) => {
@@ -24,9 +25,24 @@ const write = (key, value) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode */ }
 };
 
+// The person on this phone. v1 kept a single "name"; it is split on first read.
+// appear: what others see in a check-in room — "first" name, "initials", or "hidden".
+const PROFILE0 = { first: "", last: "", phone: "", email: "", bday: null, usual: "", hue: null, appear: "first" };
+function readProfile() {
+  const p = read(KEY.profile, PROFILE0);
+  if (typeof p.name === "string" && !p.first && !p.last) {
+    const parts = p.name.trim().split(/\s+/).filter(Boolean);
+    p.first = parts.shift() || ""; p.last = parts.join(" ");
+  }
+  delete p.name;
+  return { ...PROFILE0, ...p };
+}
+const readPhoto = () => { try { return localStorage.getItem(KEY.photo) || ""; } catch { return ""; } };
+
 const state = {
   bag: read(KEY.bag, []),
-  profile: read(KEY.profile, { name: "", phone: "" }),
+  profile: readProfile(),
+  photo: readPhoto(),
   orders: read(KEY.orders, []),
   member: read(KEY.member, null),
   prefs: read(KEY.prefs, { branch: "vanak", note: "", useCashback: true, sample: false, seeded: false }),
@@ -108,6 +124,20 @@ export const profile = () => state.profile;
 export function setProfile(patch) {
   state.profile = { ...state.profile, ...patch };
   write(KEY.profile, state.profile); emit();
+}
+export const fullName = (p = state.profile) => `${p.first || ""} ${p.last || ""}`.trim();
+/** The name a check-in room shows for you, per the privacy setting. */
+export const shownName = (p = state.profile) =>
+  p.appear === "hidden" ? "" : p.appear === "initials" ? dotted(fullName(p)) : (p.first || fullName(p));
+export const myHue = () => state.profile.hue ?? hueOf(fullName() || "you");
+
+/** The profile photo: a small square JPEG data URL, kept on its own key. */
+export const photo = () => state.photo;
+export function setPhoto(url) {
+  try { if (url) localStorage.setItem(KEY.photo, url); else localStorage.removeItem(KEY.photo); }
+  catch { return false; }                      // storage full or private mode
+  state.photo = url || ""; emit();
+  return true;
 }
 
 /* ----------------------------------------------------------------- orders */
@@ -214,7 +244,7 @@ export function clearSample() {
 
 export function forgetEverything() {
   Object.values(KEY).forEach((k) => { try { localStorage.removeItem(k); } catch {} });
-  state.bag = []; state.profile = { name: "", phone: "" }; state.orders = []; state.member = null;
+  state.bag = []; state.profile = { ...PROFILE0 }; state.photo = ""; state.orders = []; state.member = null;
   state.prefs = { branch: "vanak", note: "", useCashback: true, sample: false, seeded: true };
   write(KEY.prefs, state.prefs);
   emit();

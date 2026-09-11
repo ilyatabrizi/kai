@@ -7,7 +7,8 @@ Built by Alpha Agency on KAI's own material.
 
 - Live: https://ilyatabrizi.github.io/kai/
 - Local: `python3 serve.py` → http://localhost:8161 (add `?nosw` to bypass the offline cache)
-- Checks: `python3 e2e.py [url]` — 130 Playwright checks through the system Chrome, works against the live URL
+- Checks: `python3 e2e.py [url]` — 181 Playwright checks through the system Chrome, works against the live URL
+- Look: `python3 scripts/visual.py` — shoots the opening and the check-in frame by frame, light and dark
 
 ## What is KAI's, what is ours
 
@@ -42,11 +43,19 @@ js/presence.js        per-branch check-in, one-hour hold, clock-derived demo ros
 js/ui.js              toast, qty, one-tap add, sheet, item sheet, branch sheet, images
 js/views/*.js         home, menu, bag, order, checkin, branches, profile
 js/qr.js              byte-mode QR encoder (Alpha's, from Code Concept)
+js/theme.js           System / Light / Dark — applied pre-paint in index.html, kept in step here
+js/dial.js            the check-in cup: liquid fill, hour ring, drink-colour confetti, face flight
+js/photo.js           profile photo: pick, frame in a circle (drag/pinch/slider), 480px JPEG
+js/jalali.js          Iranian calendar for birthdays (Borkowski; 0 disagreements with ICU, 1901–2060)
+js/wordmark.js        GENERATED — KAI's "<AI COFFEE" lettering, levelled out of their pattern SVG
+js/views/profile-edit.js  photo, colour, name, phone, email, birthday, usual, branch, privacy
 js/brand.js           GENERATED — the ampersand as an SVG path
 sw.js                 network-first shell, cache-first assets, claim only on update
 build.py              stamps sw VERSION + ?v= from a content hash — run before deploy
 scripts/build_assets.py   traces the mark, cuts out products, crops covers, converts photos
 scripts/build_data.py     scripts/cache/kai_menu.json → js/data.js
+scripts/extract_wordmark.py  assets/brand/pattern.svg → js/wordmark.js
+scripts/strip_audio.py    drops an MP4's audio track without re-encoding (no ffmpeg needed)
 scripts/smoke.py, flow.py quick screenshot passes; e2e.py is the real suite
 ```
 
@@ -57,7 +66,26 @@ grammar: large titles that collapse into the bar, inset grouped lists, pills,
 sheets with a grabber, a glass tab bar (62 px, 26 px radius, sliding ink pill)
 that floats over everything. One serif — Bodoni Moda, close to the poster type —
 for the few words that speak; the system sans for everything that works; Persian
-glosses in IRANYekanX FaNum. Light only: the brand is paper.
+glosses in IRANYekanX FaNum. Light by default, because the brand is paper; a warm
+espresso dark mode (not grey) in You → Settings → Appearance, or taken from the phone.
+The physical cards — loyalty, member, order code — stay dark in both.
+
+**The opening.** Coffee (their own `--kai-coffee` brown) pours into the ampersand and
+fills it; their real wordmark rises beneath; when the page behind is ready the mark flies
+into the top bar while the paper closes in around it. Inlined into index.html by
+build.py so it starts with the first paint. ≈2 s cold, ≈0.9 s on a reload, a still frame
+under Reduce Motion.
+
+**Check-in.** The branch is a card with its own illustration, live headcount and faces.
+Tap the cup: it fills with the house olive, the hour ring draws, confetti in the colours
+of their Fluffies bursts, and your face flies up to join the others. The room lists
+everyone with a wave button; your 1st/2nd/3rd visit this month is counted on the phone.
+
+**Profile.** Photo from camera or library, framed in a circle and kept as a 480px JPEG
+on the phone; a colour for your initials; name, phone (Iranian mobile checked), email;
+a Jalali birthday that counts down to KAI's birthday gift; your usual drink (it appears
+on Home, one tap from the bag); home branch; and how check-in rooms show you — first
+name, initials, or hidden.
 
 The hero is their reel, full-bleed on a phone and inside a phone frame beside the
 headline on a desktop. Autoplay is muted; where it is refused (Low Power Mode)

@@ -11,9 +11,10 @@
 
 import { CHECKIN, STORAGE } from "./config.js";
 import { BRANCHES } from "./data.js";
-import { uid, rng, hash32 } from "./util.js";
+import { uid, rng, hash32, hueOf } from "./util.js";
 
 const KEY = STORAGE + "room";
+const VISITS = STORAGE + "visits";
 const ME = STORAGE + "meid";
 const HOLD = CHECKIN.holdMinutes * 60000;
 
@@ -63,7 +64,7 @@ function demoRoster(branchId, now = Date.now()) {
     do { name = NAMES[Math.floor(r() * NAMES.length)]; } while (used.has(name));
     used.add(name);
     const at = now - Math.floor(r() * 52 + 1) * 60000 - Math.floor(r() * 60) * 1000;
-    rows.push({ id: `demo-${branchId}-${name}`, name, at, until: at + HOLD, branch: branchId, demo: true });
+    rows.push({ id: `demo-${branchId}-${name}`, name, hue: hueOf(name), at, until: at + HOLD, branch: branchId, demo: true });
   }
   return rows;
 }
@@ -87,14 +88,36 @@ export function counts(now = Date.now()) {
 export const me = () => live(readAll(), Date.now()).find((p) => p.id === myId()) || null;
 export const isIn = () => !!me();
 
-export function checkIn({ branchId, name } = {}) {
+export function checkIn({ branchId, name, hue } = {}) {
   const now = Date.now();
   const rows = live(readAll(), now).filter((p) => p.id !== myId());
-  const entry = { id: myId(), name: name || "", at: now, until: now + HOLD, branch: branchId };
+  const entry = { id: myId(), name: name || "", hue: hue ?? null, at: now, until: now + HOLD, branch: branchId };
   rows.push(entry);
   writeAll(rows);
+  logVisit(branchId, now);
   return entry;
 }
+
+/** Keep the name others see in step with Settings while you are checked in. */
+export function rename(name, hue) {
+  const rows = readAll();
+  const mine = rows.find((p) => p.id === myId());
+  if (!mine) return;
+  mine.name = name || ""; mine.hue = hue ?? null;
+  writeAll(rows);
+}
+
+/* ---------------------------------------------------------------- visits */
+// Your own check-ins on this phone, so the room can say "your 3rd visit this month".
+const readVisits = () => { try { return JSON.parse(localStorage.getItem(VISITS) || "[]"); } catch { return []; } };
+function logVisit(branch, at) {
+  const v = readVisits(); v.push({ branch, at });
+  try { localStorage.setItem(VISITS, JSON.stringify(v.slice(-120))); } catch {}
+}
+export function visitsThisMonth(now = new Date()) {
+  return readVisits().filter((x) => { const d = new Date(x.at); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length;
+}
+export const forgetVisits = () => { try { localStorage.removeItem(VISITS); } catch {} };
 
 export function extend() {
   const rows = readAll();

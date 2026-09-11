@@ -3,12 +3,12 @@
 // wrote about itself.
 
 import { BUSINESS } from "../config.js";
-import { ITEMS, CATEGORIES, BRANCHES, inCategory } from "../data.js";
-import { esc, priceHTML, money, plural } from "../util.js";
+import { ITEMS, CATEGORIES, BRANCHES, inCategory, byId } from "../data.js";
+import { esc, priceHTML, price, money, plural } from "../util.js";
 import { icon } from "../icons.js";
 import { MARK } from "../brand.js";
-import { addHTML } from "../ui.js";
-import { member, ladder, myBranch } from "../store.js";
+import { addHTML, avatarHTML } from "../ui.js";
+import { member, ladder, myBranch, profile, photo } from "../store.js";
 import * as presence from "../presence.js";
 import { haptic, reduced } from "../motion.js";
 
@@ -41,6 +41,7 @@ export default function home() {
   const lad = ladder(m.points);
   const branch = myBranch();
   const open = BRANCHES.filter((b) => b.status === "open");
+  const usual = byId(profile().usual);
 
   const html = `
   <section class="hero" id="hero">
@@ -49,11 +50,7 @@ export default function home() {
       <video id="hero-video" muted playsinline loop autoplay preload="auto" poster="assets/video/poster.webp" src="assets/video/hero.mp4" aria-label="KAI Fluffies"></video>
     </div>
     <div class="hero-veil"></div>
-    <div class="hero-copy">
-      <div class="eyebrow">KAI Coffee · Tehran</div>
-      <h1 class="hero-h">Your <em>comfort</em><br>zone.</h1>
-      <p class="hero-sub">Seven branches, one card. Order from your phone, check in when you sit down, and collect cashback with every cup.</p>
-    </div>
+    <h1 class="sr-only">KAI Coffee, Tehran</h1>
     <div class="hero-foot">
       <div class="hero-ctas">
         <a class="btn" href="#/menu">Order now</a>
@@ -79,6 +76,15 @@ export default function home() {
         </div>
       </a>
     </section>
+
+    ${usual ? `
+    <section class="sec" style="margin-top:12px">
+      <div class="usual" data-item="${usual.id}">
+        <span class="usual-img"><img src="${usual.img}" alt="" loading="lazy" decoding="async" width="560" height="560"></span>
+        <span class="usual-t"><small>Your usual</small><b>${esc(usual.en)}</b><span class="money">${price(usual.price)}</span></span>
+        ${addHTML(usual)}
+      </div>
+    </section>` : ""}
 
     <section class="sec">
       <div class="sec-head">
@@ -172,7 +178,7 @@ export default function home() {
         <a class="btn btn--soft" href="${BUSINESS.siteUrl}" target="_blank" rel="noopener">${icon("globe")} ${BUSINESS.site}</a>
       </div>
       <p class="footer-fa" lang="fa">کافه کای — منوی دیجیتال، شعب و باشگاه مشتریان</p>
-      <div class="powered"><img src="assets/brand/alpha-black.png" alt="Alpha Agency" width="34" height="26"><div><small>Powered by</small><b>Alpha Agency</b></div><span>Preview · ${new Date().getFullYear()}</span></div>
+      <div class="powered"><img class="on-light" src="assets/brand/alpha-black.png" alt="Alpha Agency" width="34" height="26"><img class="on-dark" src="assets/brand/alpha-white.png" alt="" width="34" height="26"><div><small>Powered by</small><b>Alpha Agency</b></div><span>Preview · ${new Date().getFullYear()}</span></div>
     </footer>
   </div>`;
 
@@ -216,6 +222,7 @@ export default function home() {
       // the rooms, live
       const rows = screen.querySelector("#room-rows");
       const total = screen.querySelector("#room-total");
+      const me = presence.myId();
       const paint = () => {
         const counts = presence.counts();
         const top = BRANCHES.filter((b) => b.status === "open")
@@ -226,7 +233,7 @@ export default function home() {
         rows.innerHTML = top.map(({ b, n, people }) => `
           <li class="person"><span class="row-ico row-ico--sage">${icon("pin")}</span>
             <span class="person-n">${esc(b.en)}<small>${n ? plural(n, "person", "people") + " here now" : "Nobody yet"}</small></span>
-            <span class="faces">${people.slice(-3).map((p) => `<span class="avatar">${esc((p.name || "You").slice(0, 2).toUpperCase())}</span>`).join("")}${n > 3 ? `<span class="more">+${n - 3}</span>` : ""}</span>
+            <span class="faces">${people.slice(-3).map((p) => avatarHTML({ name: p.name, hue: p.hue, photo: p.id === me ? photo() : "", size: 28 })).join("")}${n > 3 ? `<span class="more">+${n - 3}</span>` : ""}</span>
           </li>`).join("");
       };
       paint();

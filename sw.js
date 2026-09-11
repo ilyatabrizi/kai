@@ -13,7 +13,7 @@
 // install the page keeps the network it started with — claiming mid-flight hands
 // the new worker every in-flight image request, and they fail.
 
-const VERSION = "kai-382b24e5d5";
+const VERSION = "kai-d9992407d9";
 const DEV = ["localhost", "127.0.0.1"].includes(location.hostname);
 const MARKER = "./__installed__";
 
@@ -21,7 +21,8 @@ const SHELL = [
   "./", "./index.html", "./manifest.webmanifest", "./css/app.css",
   "./js/app.js", "./js/boot.js", "./js/brand.js", "./js/config.js", "./js/data.js", "./js/icons.js",
   "./js/install.js", "./js/motion.js", "./js/presence.js", "./js/qr.js", "./js/router.js",
-  "./js/store.js", "./js/ui.js", "./js/util.js",
+  "./js/store.js", "./js/ui.js", "./js/util.js", "./js/theme.js", "./js/jalali.js", "./js/wordmark.js",
+  "./js/photo.js", "./js/dial.js", "./js/views/profile-edit.js",
   "./js/views/home.js", "./js/views/menu.js", "./js/views/bag.js", "./js/views/order.js",
   "./js/views/checkin.js", "./js/views/branches.js", "./js/views/profile.js",
 ];
@@ -29,7 +30,7 @@ const ASSETS = [
   "./assets/fonts/bodoni.woff2", "./assets/fonts/bodoni-italic.woff2",
   "./assets/fonts/IRANYekanXFaNum-Regular.woff2", "./assets/fonts/IRANYekanXFaNum-Medium.woff2",
   "./assets/fonts/IRANYekanXFaNum-DemiBold.woff2", "./assets/fonts/IRANYekanXFaNum-Bold.woff2",
-  "./assets/brand/mark.svg", "./assets/brand/pattern.svg", "./assets/brand/alpha-black.png",
+  "./assets/brand/mark.svg", "./assets/brand/pattern.svg", "./assets/brand/alpha-black.png", "./assets/brand/alpha-white.png",
   "./assets/icons/icon-192.png", "./assets/icons/apple-touch-icon.png",
   "./assets/video/poster.webp",
 ];

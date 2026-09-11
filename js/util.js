@@ -28,6 +28,20 @@ export const initials = (name) => {
 };
 
 export const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+
+/** A stable pastel (0–5) for a name — the same person keeps the same colour.
+ *  The house olive (6) is never handed out; it is there to be chosen. */
+export const hueOf = (s) => hash32(String(s || "?").trim().toLowerCase()) % 6;
+
+/** "Ilya Tabrizi" → "I. T." */
+export const dotted = (name) => String(name || "").trim().split(/\s+/).filter(Boolean)
+  .slice(0, 2).map((w) => w[0].toUpperCase() + ".").join(" ");
+
+/** 1 → "1st", 22 → "22nd". */
+export const ordinal = (n) => {
+  const s = ["th", "st", "nd", "rd"], v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
 export const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
 
 /* ------------------------------------------------------------------ clock */

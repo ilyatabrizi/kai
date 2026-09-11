@@ -2,7 +2,7 @@
 // bottom sheet (and the two sheets the app opens most: an item, a branch), lazy
 // images and reveal-on-scroll.
 
-import { $, $$, esc, priceHTML, price } from "./util.js";
+import { $, $$, esc, priceHTML, price, initials, hueOf } from "./util.js";
 import { haptic, replay, reduced } from "./motion.js";
 import { icon } from "./icons.js";
 import { byId, BRANCHES } from "./data.js";
@@ -251,3 +251,58 @@ export function observeReveals(root = document) {
 export const emptyHTML = (title, sub) => `
   <div class="empty"><span class="empty-mark">${MARK}</span>
     <p class="d3">${title}</p><p class="small" style="margin-top:6px">${sub}</p></div>`;
+
+/* ---------------------------------------------------------------- avatars */
+/** A face: the photo if there is one, else initials on the person's colour. */
+export function avatarHTML({ name = "", photo = "", hue = null, size = 40, me = false, cls = "" } = {}) {
+  const h = hue ?? hueOf(name || "?");
+  const face = photo ? `<img src="${photo}" alt="" decoding="async">`
+    : name ? `<b>${esc(initials(name))}</b>` : icon("profile");
+  return `<span class="av av-${h}${me ? " av--me" : ""}${cls ? " " + cls : ""}" style="--s:${size}px" aria-hidden="true">${face}</span>`;
+}
+
+/* ------------------------------------------------------ segmented control */
+export const segHTML = (name, options, value, cls = "") => `
+  <div class="seg ${cls}" role="radiogroup" data-seg="${name}">
+    <span class="seg-ink" aria-hidden="true"></span>
+    ${options.map((o) => `<button type="button" role="radio" aria-checked="${o.v === value}" data-v="${o.v}">${o.ico ? icon(o.ico) : ""}<span>${esc(o.label)}</span></button>`).join("")}
+  </div>`;
+
+/** The white pill slides to the chosen segment; onChange(value, event). */
+export function wireSeg(seg, onChange) {
+  const ink = seg.querySelector(".seg-ink");
+  const place = (animate = true) => {
+    const on = seg.querySelector('[aria-checked="true"]') || seg.querySelector("button");
+    if (!on || !on.offsetWidth) return;
+    if (!animate) ink.style.transition = "none";
+    ink.style.width = `${on.offsetWidth}px`;
+    ink.style.transform = `translateX(${on.offsetLeft - 3}px)`;
+    if (!animate) { void ink.offsetWidth; ink.style.transition = ""; }
+    seg.dataset.ready = "1";
+  };
+  seg.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-v]");
+    if (!b || b.getAttribute("aria-checked") === "true") return;
+    seg.querySelectorAll("button[data-v]").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+    haptic(6); place(); onChange(b.dataset.v, e);
+  });
+  place(false);
+  if ("ResizeObserver" in window) new ResizeObserver(() => place(false)).observe(seg);
+  return { place };
+}
+
+/* ------------------------------------------------------------ action sheet */
+/** iOS-style choices. Each action runs inside the tap, so a file picker may open from it. */
+export function actionSheet({ title = "", sub = "", actions = [] } = {}) {
+  openSheet({
+    title, sub,
+    body: `<div class="acts">${actions.map((a, i) => `<button class="act${a.danger ? " act--danger" : ""}" type="button" data-i="${i}">${a.ico ? icon(a.ico) : ""}<span>${esc(a.label)}</span></button>`).join("")}</div>`,
+    mount(sheet) {
+      sheet.querySelectorAll(".act").forEach((b) => b.addEventListener("click", () => {
+        const a = actions[+b.dataset.i];
+        closeSheet();
+        a.run?.();
+      }));
+    },
+  });
+}

@@ -3,10 +3,12 @@
 
 import { BUSINESS } from "./config.js";
 import { MARK } from "./brand.js";
+import { WORDMARK } from "./wordmark.js";
+import { initTheme } from "./theme.js";
 import { $, $$, money } from "./util.js";
 import { icon } from "./icons.js";
 import { route, startRouter, path } from "./router.js";
-import { bagCount, bagTotal, subscribe, prefs, seedSample, myBranch } from "./store.js";
+import { bagCount, bagTotal, subscribe, prefs, seedSample, myBranch, photo } from "./store.js";
 import * as presence from "./presence.js";
 import { runBoot } from "./boot.js";
 import { wireAdds, wireImages, observeReveals, closeSheet } from "./ui.js";
@@ -18,6 +20,7 @@ import orderView from "./views/order.js";
 import checkin from "./views/checkin.js";
 import branches from "./views/branches.js";
 import profileView from "./views/profile.js";
+import profileEdit from "./views/profile-edit.js";
 
 /* ----------------------------------------------------------------- routes */
 route("/", home);
@@ -27,6 +30,7 @@ route("/order/:id", orderView);
 route("/checkin", checkin);
 route("/branches", branches);
 route("/profile", profileView);
+route("/profile/edit", profileEdit);
 route("/item/:id", ({ id }) => menu({ focus: id }, {}));
 
 /* ------------------------------------------------------------------- bars */
@@ -39,12 +43,14 @@ const back = $("#bar-back");
 const homeLink = $(".bar-home");
 
 $("#bar-mark").innerHTML = MARK;
+$("#bar-word").innerHTML = WORDMARK;
 $("#bag-ico").innerHTML = icon("bag");
 back.innerHTML = icon("chevronL");
 tabs.querySelectorAll(".tab").forEach((tab) => { tab.querySelector(".tab-ico").innerHTML = icon(tab.dataset.tab); });
 
 const TAB_FOR = { "/": "home", "/menu": "menu", "/item": "menu", "/checkin": "checkin", "/branches": "branches", "/profile": "profile", "/bag": null, "/order": null };
-const TITLES = { "/menu": "Menu", "/item": "Menu", "/bag": "Bag", "/order": "Order", "/checkin": "Check in", "/branches": "Branches", "/profile": "You" };
+const TITLES = { "/menu": "Menu", "/item": "Menu", "/bag": "Bag", "/order": "Order", "/checkin": "Check in", "/branches": "Branches", "/profile": "You", "/profile/edit": "Edit profile" };
+const titleOf = (p) => TITLES[p] ?? TITLES[rootOf(p)];
 const rootOf = (p) => (p in TAB_FOR ? p : "/" + p.split("/")[1]);
 
 function paintTabs(p) {
@@ -77,6 +83,18 @@ function paintBag() {
   dock.hidden = !show;
 }
 subscribe(paintBag);
+
+/* ------------------------------------------------- your face on the You tab */
+const youIco = tabs.querySelector('[data-tab="profile"] .tab-ico');
+let shownPhoto = null;
+function paintYou() {
+  const ph = photo();
+  if (ph === shownPhoto) return;
+  shownPhoto = ph;
+  youIco.innerHTML = ph ? `<span class="tab-av"><img src="${ph}" alt=""></span>` : icon("profile");
+}
+subscribe(paintYou);
+paintYou();
 
 /* ----------------------------------------------------------- the check-in */
 function paintChip() {
@@ -130,8 +148,9 @@ document.addEventListener("view:rendered", (e) => {
   paintBag();
   paintChip();
   lt = e.detail.screen.querySelector(".lt");
-  barTitle.textContent = TITLES[rootOf(p)] || "";
-  const sub = !(rootOf(p) in TAB_FOR) || TAB_FOR[rootOf(p)] === null;
+  barTitle.textContent = titleOf(p) || "";
+  // a pushed screen (two segments deep, or a page with no tab of its own) gets a back button
+  const sub = TAB_FOR[rootOf(p)] === null || p.split("/").filter(Boolean).length > 1;
   back.hidden = !sub;
   homeLink.hidden = sub;
   bar.classList.remove("solid", "titled");
@@ -139,16 +158,16 @@ document.addEventListener("view:rendered", (e) => {
   observeReveals(e.detail.screen);
   wireImages(e.detail.screen);
   chrome();
-  const label = TITLES[rootOf(p)];
+  const label = titleOf(p);
   document.title = label ? `${label} · KAI Coffee` : `KAI Coffee — ${BUSINESS.city}`;
 });
 back.addEventListener("click", () => (history.length > 1 ? history.back() : (location.hash = "#/")));
 
 /* -------------------------------------------------------------------- go */
+initTheme();
 wireAdds();
 if (!prefs().seeded) seedSample();
-runBoot();
-startRouter();
+runBoot(startRouter());
 
 if ("serviceWorker" in navigator && !location.search.includes("nosw")) {
   addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
