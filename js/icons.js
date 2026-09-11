@@ -44,6 +44,7 @@ const ICONS = {
   language: `<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.7 2.6 14.3 0 17M12 3.5c-2.6 2.7-2.6 14.3 0 17"/>`,
   fire: `<path d="M12 3.5c1 3.2 4.5 4.4 4.5 8.7a4.5 4.5 0 0 1-9 0c0-1.6.6-2.6 1.3-3.4.2 1.1.8 1.9 1.7 2.2C10 8.4 10.2 5.6 12 3.5z"/>`,
   leaf: `<path d="M5 19c0-8 5-13 14-13-1 9-5 13-13 13z"/><path d="M5 19c3-4 6-7 10-9"/>`,
+  play: `<path d="M8 5.5v13l10-6.5z" fill="currentColor" stroke="none"/>`,
 };
 
 export const icon = (name, extra = "") => wrap(ICONS[name] || ICONS.info, extra);

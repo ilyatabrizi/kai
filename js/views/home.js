@@ -46,9 +46,7 @@ export default function home() {
   <section class="hero" id="hero">
     <div class="hero-media">
       <img src="assets/video/poster.webp" alt="" width="720" height="1280" fetchpriority="high">
-      <video id="hero-video" muted playsinline loop autoplay preload="metadata" poster="assets/video/poster.webp" aria-label="KAI Fluffies">
-        <source src="assets/video/hero.mp4" type="video/mp4">
-      </video>
+      <video id="hero-video" muted playsinline loop autoplay preload="auto" poster="assets/video/poster.webp" src="assets/video/hero.mp4" aria-label="KAI Fluffies"></video>
     </div>
     <div class="hero-veil"></div>
     <div class="hero-copy">
@@ -66,7 +64,7 @@ export default function home() {
         <span class="pill-stat">${icon("sparkle")} ${ITEMS.length} things on the card</span>
       </div>
     </div>
-    <button class="icon-btn btn--glass hero-mute" id="hero-sound" type="button" aria-label="Turn sound on" aria-pressed="false" hidden>${icon("mute")}</button>
+    <button class="hero-play" id="hero-play" type="button" aria-label="Play the film" hidden>${icon("play")}</button>
   </section>
 
   <div class="wrap">
@@ -181,21 +179,35 @@ export default function home() {
   return {
     html, padTop: false,
     mount(screen) {
-      // The reel: autoplay where allowed; where it is not (Low Power Mode), the
-      // poster stays and nothing looks broken. Sound is one tap away.
+      // The reel. It has no sound, so every browser may autoplay it — but only if
+      // it is muted *as a property*: Chrome does not always honour the attribute on
+      // a video created from markup, and one unhonoured attribute is a blank hero.
+      // If a browser still refuses (Low Power Mode, a strict policy), the first
+      // touch or scroll starts it, and a play button appears in the meantime.
       const video = screen.querySelector("#hero-video");
-      const sound = screen.querySelector("#hero-sound");
-      if (video && !reduced()) {
-        const show = () => video.classList.add("on");
-        video.addEventListener("playing", show, { once: true });
-        video.play().then(() => { show(); sound.hidden = false; }).catch(() => {});
-        sound.addEventListener("click", () => {
-          haptic(6);
-          video.muted = !video.muted;
-          sound.setAttribute("aria-pressed", String(!video.muted));
-          sound.setAttribute("aria-label", video.muted ? "Turn sound on" : "Turn sound off");
-          sound.innerHTML = icon(video.muted ? "mute" : "sound");
-        });
+      const playBtn = screen.querySelector("#hero-play");
+      if (video) {
+        video.muted = true; video.defaultMuted = true; video.playsInline = true;
+        video.setAttribute("muted", ""); video.setAttribute("playsinline", ""); video.setAttribute("webkit-playsinline", "");
+        const show = () => { video.classList.add("on"); playBtn.hidden = true; };
+        video.addEventListener("playing", show);
+        let armed = false;
+        const attempt = () => {
+          if (!video.paused) { show(); return; }
+          const p = video.play();
+          if (p && p.catch) p.then(show).catch(() => { if (!armed) { armed = true; playBtn.hidden = false; } });
+        };
+        attempt();
+        video.addEventListener("loadedmetadata", attempt, { once: true });
+        video.addEventListener("canplay", attempt, { once: true });
+        // a strict autoplay policy lifts on the first gesture; use it
+        const kick = () => { if (video.paused) attempt(); if (!video.paused) cleanup(); };
+        const cleanup = () => ["pointerdown", "touchstart", "keydown", "scroll"].forEach((ev) => removeEventListener(ev, kick));
+        ["pointerdown", "touchstart", "keydown", "scroll"].forEach((ev) => addEventListener(ev, kick, { passive: true }));
+        document.addEventListener("view:leaving", function once() { cleanup(); document.removeEventListener("view:leaving", once); });
+        playBtn.addEventListener("click", () => { haptic(6); video.play().then(show).catch(() => {}); });
+        // a tab that comes back from the background resumes the loop
+        document.addEventListener("visibilitychange", () => { if (!document.hidden && video.isConnected && video.paused) attempt(); });
       }
       // the ladder fills once it is on screen
       const bar = screen.querySelector("#loy-bar");

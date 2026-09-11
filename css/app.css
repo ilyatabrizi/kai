@@ -352,7 +352,8 @@ h1, h2, h3, h4, p, figure, figcaption { margin: 0; }
 .hero-ctas .btn { flex: 1; padding: 0 16px; }
 .hero-strip { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .hero-strip .pill-stat { background: var(--glass-bg); -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass); box-shadow: var(--glass-edge); }
-.hero-mute { position: absolute; right: 16px; top: calc(var(--bar-h) + var(--safe-t) + 10px); }
+.hero-play { position: absolute; left: 50%; top: 50%; width: 72px; height: 72px; margin: -36px 0 0 -36px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); background: var(--glass-bg); -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass); box-shadow: var(--glass-edge), 0 14px 34px -10px rgba(23, 21, 15, .4); animation: pop .5s var(--ease-spring); }
+.hero-play svg { width: 30px; height: 30px; margin-left: 3px; }
 
 /* ---------------------------------------------------------------- loyalty */
 .loy {
@@ -684,7 +685,6 @@ img.imgload.ready { opacity: 1; }
   .hero-sub { font-size: 19px; max-width: 36ch; }
   .hero-foot { grid-column: 1; padding: 20px 0 0 max(0px, calc((100% - var(--wrap)) / 2)); align-self: start; }
   .hero-ctas { max-width: 420px; }
-  .hero-mute { top: auto; bottom: 14px; right: 14px; }
   .story-copy .d2 { font-size: 40px; }
 }
 @media (max-width: 360px) { .tab-l { font-size: 10px; } .tile { width: 146px; } }
@@ -698,5 +698,4 @@ img.imgload.ready { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   .rv { opacity: 1; transform: none; }
-  .hero-media video { display: none; }
 }

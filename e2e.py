@@ -113,8 +113,14 @@ def main():
         shot(page, "home")
 
         # ------------------------------------------------------------- home
-        check("hero: reel with poster", page.evaluate("!!document.querySelector('#hero-video source') && document.querySelector('#hero-video').poster.includes('poster.webp')"))
+        check("hero: reel with poster", page.evaluate("document.getElementById('hero-video').getAttribute('src').endsWith('hero.mp4') && document.getElementById('hero-video').poster.includes('poster.webp')"))
         check("hero: headline is the tagline", "comfort" in page.inner_text(".hero-h"))
+        page.wait_for_timeout(1500)
+        vs = page.evaluate("(() => { const v = document.getElementById('hero-video'); return { paused: v.paused, t: v.currentTime, w: v.videoWidth, muted: v.muted, on: v.classList.contains('on'), audio: v.webkitAudioDecodedByteCount, ready: v.readyState }; })()")
+        check("hero: the reel is actually playing", (not vs["paused"]) and vs["t"] > 0.3 and vs["on"], str(vs))
+        check("hero: reel is 720 wide and muted as a property", vs["w"] == 720 and vs["muted"], str(vs))
+        check("hero: reel carries no audio track", vs["audio"] == 0, str(vs))
+        check("hero: no sound toggle any more", page.locator("#hero-sound").count() == 0)
         check("loyalty card shows a league and points", re.search(r"(Stranger|Friend|Close Friend|Best Friend|Legend) league", page.inner_text(".loy")) is not None, page.inner_text(".loy")[:60])
         check("six new items on the shelf", page.locator(".hscroll .tile").count() == 6, str(page.locator(".hscroll .tile").count()))
         check("nine categories", page.locator(".cats .cat").count() == 9)
