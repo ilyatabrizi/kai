@@ -336,7 +336,8 @@ h1, h2, h3, h4, p, figure, figcaption { margin: 0; }
   display: flex; flex-direction: column; justify-content: space-between; color: var(--ink);
 }
 .hero-media { position: absolute; inset: 0; }
-.hero-media video, .hero-media img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; }
+/* poster and reel share the frame — the reel sits on top and fades in once it plays */
+.hero-media video, .hero-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 55%; }
 .hero-media video { opacity: 0; transition: opacity .8s var(--ease-out); }
 .hero-media video.on { opacity: 1; }
 .hero-veil { position: absolute; inset: 0; background:

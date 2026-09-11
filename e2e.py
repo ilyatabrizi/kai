@@ -121,6 +121,19 @@ def main():
         check("hero: reel is 720 wide and muted as a property", vs["w"] == 720 and vs["muted"], str(vs))
         check("hero: reel carries no audio track", vs["audio"] == 0, str(vs))
         check("hero: no sound toggle any more", page.locator("#hero-sound").count() == 0)
+        geo = page.evaluate("(() => { const r = e => e.getBoundingClientRect(); const h = r(document.getElementById('hero')), v = r(document.getElementById('hero-video')); return { dt: Math.abs(h.top - v.top), dh: Math.abs(h.height - v.height), dw: Math.abs(h.width - v.width) }; })()")
+        check("hero: the reel covers the hero frame (not stacked under the poster)", geo["dt"] < 2 and geo["dh"] < 2 and geo["dw"] < 2, str(geo))
+        # visible motion: two captures of the hero a second apart must differ
+        try:
+            from PIL import Image
+            import io, numpy as np
+            hero_box = page.evaluate("(() => { const b = document.getElementById('hero').getBoundingClientRect(); return { x: b.left, y: b.top, width: b.width, height: Math.min(b.height, 700) }; })()")
+            a = page.screenshot(clip=hero_box); page.wait_for_timeout(1200); b_ = page.screenshot(clip=hero_box)
+            A = np.asarray(Image.open(io.BytesIO(a)).convert("L"), dtype=float); B = np.asarray(Image.open(io.BytesIO(b_)).convert("L"), dtype=float)
+            motion = float(np.abs(A - B).mean())
+            check("hero: frames visibly change over a second", motion > 0.4, f"mean abs diff {motion:.2f}")
+        except Exception as ex:
+            check("hero: frames visibly change over a second", False, str(ex))
         check("loyalty card shows a league and points", re.search(r"(Stranger|Friend|Close Friend|Best Friend|Legend) league", page.inner_text(".loy")) is not None, page.inner_text(".loy")[:60])
         check("six new items on the shelf", page.locator(".hscroll .tile").count() == 6, str(page.locator(".hscroll .tile").count()))
         check("nine categories", page.locator(".cats .cat").count() == 9)
