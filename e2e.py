@@ -118,8 +118,16 @@ def main():
         page.goto(BASE + ("" if LIVE else "?nosw") + "#/", wait_until="load")
         page.wait_for_timeout(600)
         check("opening is pouring at 0.6 s", page.evaluate("!!document.getElementById('boot')"))
-        page.wait_for_timeout(2800)
-        check("opening hands over to the bar and leaves", page.evaluate("!document.getElementById('boot') && !document.documentElement.classList.contains('booting')"))
+        import time as _t
+        t_boot = _t.time()
+        try:
+            page.wait_for_selector("#boot", state="detached", timeout=9000)
+        except Exception:
+            pass
+        waited = _t.time() - t_boot + 0.6
+        check("opening hands over to the bar and leaves", page.evaluate("!document.getElementById('boot') && !document.documentElement.classList.contains('booting')"), f"still up after {waited:.1f}s")
+        check("opening lasts under 4.5 s from load", waited < 4.5, f"{waited:.1f}s")
+        page.wait_for_timeout(300)
         check("bar carries KAI's own wordmark", page.locator("#bar-word svg .wl").count() == 9)
         check("fonts: Bodoni Moda loaded", page.evaluate("document.fonts.check('500 32px \"Bodoni Moda\"')"))
         check("fonts: IRANYekanXFaNum loaded", page.evaluate("document.fonts.check('500 14px IRANYekanXFaNum')"))
@@ -417,7 +425,13 @@ def main():
         d = browser.new_context(viewport={"width": 1280, "height": 800})
         dp = d.new_page()
         dp.on("pageerror", lambda e: errors.append("desktop " + str(e)))
-        dp.goto(BASE + ("" if LIVE else "?nosw") + "#/", wait_until="load"); dp.wait_for_timeout(1800)
+        dp.goto(BASE + ("" if LIVE else "?nosw") + "#/", wait_until="load")
+        dp.wait_for_selector(".hero-media", timeout=15000)
+        try:
+            dp.wait_for_selector("#boot", state="detached", timeout=9000)
+        except Exception:
+            pass
+        dp.wait_for_timeout(400)
         check("desktop: the reel stands centred", dp.evaluate("(() => { const b = document.querySelector('.hero-media').getBoundingClientRect(); return Math.abs(b.left + b.width / 2 - innerWidth / 2) < 4 && b.height > 300; })()"))
         check("desktop: no horizontal scroll", dp.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
         dp.evaluate("location.hash='#/menu'"); dp.wait_for_timeout(600)

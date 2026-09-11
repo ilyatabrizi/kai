@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/bodoni.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/IRANYekanXFaNum-Medium.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=d9992407d9">
+<link rel="stylesheet" href="css/app.css?v=bfc0dd3fc3">
 <script>
   // Before anything paints: the theme the customer chose (or the phone's), which
   // opening to play, and the scroll offset an installed app would otherwise restore.
@@ -44,7 +44,35 @@
     }, 9000);
   })();
 </script>
-<script type="module" src="js/app.js?v=d9992407d9"></script>
+<!-- preload:start -->
+<link rel="modulepreload" href="js/boot.js">
+<link rel="modulepreload" href="js/brand.js">
+<link rel="modulepreload" href="js/config.js">
+<link rel="modulepreload" href="js/data.js">
+<link rel="modulepreload" href="js/dial.js">
+<link rel="modulepreload" href="js/icons.js">
+<link rel="modulepreload" href="js/install.js">
+<link rel="modulepreload" href="js/jalali.js">
+<link rel="modulepreload" href="js/motion.js">
+<link rel="modulepreload" href="js/photo.js">
+<link rel="modulepreload" href="js/presence.js">
+<link rel="modulepreload" href="js/qr.js">
+<link rel="modulepreload" href="js/router.js">
+<link rel="modulepreload" href="js/store.js">
+<link rel="modulepreload" href="js/theme.js">
+<link rel="modulepreload" href="js/ui.js">
+<link rel="modulepreload" href="js/util.js">
+<link rel="modulepreload" href="js/views/bag.js">
+<link rel="modulepreload" href="js/views/branches.js">
+<link rel="modulepreload" href="js/views/checkin.js">
+<link rel="modulepreload" href="js/views/home.js">
+<link rel="modulepreload" href="js/views/menu.js">
+<link rel="modulepreload" href="js/views/order.js">
+<link rel="modulepreload" href="js/views/profile-edit.js">
+<link rel="modulepreload" href="js/views/profile.js">
+<link rel="modulepreload" href="js/wordmark.js">
+<!-- preload:end -->
+<script type="module" src="js/app.js?v=bfc0dd3fc3"></script>
 </head>
 <body>
 

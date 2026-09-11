@@ -13,7 +13,7 @@
 // install the page keeps the network it started with — claiming mid-flight hands
 // the new worker every in-flight image request, and they fail.
 
-const VERSION = "kai-d9992407d9";
+const VERSION = "kai-bfc0dd3fc3";
 const DEV = ["localhost", "127.0.0.1"].includes(location.hostname);
 const MARKER = "./__installed__";
 

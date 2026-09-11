@@ -48,9 +48,24 @@ def boot_block():
 <!-- boot:end -->"""
 
 
+PRELOAD_RE = re.compile(r"<!-- preload:start -->.*?<!-- preload:end -->", re.S)
+
+
+def preload_block():
+    """Every module, announced up front. ES imports are otherwise found one level at a
+    time — app.js, then the views, then what they import — one round trip per level,
+    which from Tehran to GitHub Pages is most of the opening screen's wait."""
+    mods = sorted(p.relative_to(ROOT).as_posix() for p in ROOT.glob("js/**/*.js") if p.name != "app.js")
+    links = "\n".join(f'<link rel="modulepreload" href="{m}">' for m in mods)
+    return f"<!-- preload:start -->\n{links}\n<!-- preload:end -->"
+
+
 idx = ROOT / "index.html"
 html = idx.read_text(encoding="utf-8")
 html = BOOT_RE.sub(lambda _: boot_block(), html)
+if "<!-- preload:start -->" not in html:
+    html = html.replace('<script type="module" src="js/app.js', '<!-- preload:start -->\n<!-- preload:end -->\n<script type="module" src="js/app.js', 1)
+html = PRELOAD_RE.sub(lambda _: preload_block(), html)
 idx.write_text(html, encoding="utf-8")
 
 files = sorted([*ROOT.glob("js/**/*.js"), ROOT / "css/app.css", ROOT / "index.html", ROOT / "manifest.webmanifest"])
