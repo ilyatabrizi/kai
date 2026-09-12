@@ -403,6 +403,38 @@ def main():
         page.click("#load-sample"); settle(page, 600)
         check("sample account can be reloaded", int(re.sub(r"[^\d]", "", page.inner_text(".member-grid > div:nth-child(1) b"))) > 1000)
 
+        # --------------------------------------------------- the folding bar
+        goto(page, "#/menu", 700)
+        open_w = page.evaluate("document.getElementById('tabs').getBoundingClientRect().width")
+        page.evaluate("scrollTo(0, 900)"); settle(page, 700)
+        folded = page.evaluate("({ min: document.getElementById('tabs').classList.contains('min'), w: document.getElementById('tabs').getBoundingClientRect().width, dock: getComputedStyle(document.getElementById('dock')).opacity })")
+        check("the bar folds to the tab you are on when you read down", folded["min"] and folded["w"] < open_w / 2, f"{open_w:.0f} → {folded['w']:.0f}")
+        check("the folded bar still shows that tab, not a squeezed one", page.evaluate("(() => { const t = document.querySelector('.tab[aria-current=page]'), b = document.getElementById('tabs').getBoundingClientRect(), r = t.getBoundingClientRect(); return r.width > 50 && r.left >= b.left - 1 && r.right <= b.right + 1; })()"))
+        check("the pill stays under it", page.evaluate("(() => { const i = document.getElementById('tabs-ink').getBoundingClientRect(), t = document.querySelector('.tab[aria-current=page]').getBoundingClientRect(); return Math.abs(i.left - t.left) < 3 && Math.abs(i.width - t.width) < 3; })()"))
+        page.click("#tabs"); settle(page, 700)
+        check("tapping a folded bar opens it instead of navigating", page.evaluate("!document.getElementById('tabs').classList.contains('min')") and page.evaluate("location.hash").startswith("#/menu"))
+        page.evaluate("scrollTo(0, 1800)"); settle(page, 700)
+        page.evaluate("scrollBy(0, -300)"); settle(page, 700)
+        check("scrolling back up opens it", page.evaluate("!document.getElementById('tabs').classList.contains('min')"))
+        page.evaluate("scrollTo(0, 1800)"); settle(page, 700)
+        goto(page, "#/branches", 700)
+        check("going anywhere opens it", page.evaluate("!document.getElementById('tabs').classList.contains('min') && !document.documentElement.classList.contains('nav-min')"))
+        goto(page, "#/bag", 600)
+        page.evaluate("scrollTo(0, 900)"); settle(page, 600)
+        check("a short page never folds it", page.evaluate("!document.getElementById('tabs').classList.contains('min')"))
+        # the trap that comes with any glass bar: an ancestor with a transform blurs nothing
+        goto(page, "#/menu", 700)
+        rooted = page.evaluate("""(() => {
+          const glass = [...document.querySelectorAll('*')].filter((e) => { const s = getComputedStyle(e); return (s.backdropFilter || s.webkitBackdropFilter || 'none') !== 'none'; });
+          const bad = [];
+          for (const el of glass) for (let p = el.parentElement; p; p = p.parentElement) {
+            const s = getComputedStyle(p);
+            if (s.transform !== 'none' || s.filter !== 'none' || s.perspective !== 'none' || (s.opacity !== '' && +s.opacity < 1)) { bad.push(el.className + ' under ' + p.className); break; }
+          }
+          return { glass: glass.length, bad };
+        })()""")
+        check("no glass sits under a transformed ancestor", rooted["glass"] > 0 and not rooted["bad"], str(rooted)[:180])
+
         # ------------------------------------------------------- appearance
         goto(page, "#/profile", 700)
         check("appearance follows the phone by default", page.evaluate("document.documentElement.dataset.theme") == "system" and page.evaluate("document.documentElement.dataset.mode") == "light")
@@ -438,6 +470,9 @@ def main():
         except Exception:
             pass
         dp.wait_for_timeout(400)
+        dp.evaluate("scrollTo(0, 1200)"); dp.wait_for_timeout(600)
+        check("desktop: the bar keeps all five tabs", dp.evaluate("!document.getElementById('tabs').classList.contains('min')"))
+        dp.evaluate("scrollTo(0, 0)"); dp.wait_for_timeout(400)
         check("desktop: the reel stands centred", dp.evaluate("(() => { const b = document.querySelector('.hero-media').getBoundingClientRect(); return Math.abs(b.left + b.width / 2 - innerWidth / 2) < 4 && b.height > 300; })()"))
         check("desktop: no horizontal scroll", dp.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"))
         dp.evaluate("location.hash='#/menu'"); dp.wait_for_timeout(600)

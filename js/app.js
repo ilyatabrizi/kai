@@ -37,6 +37,9 @@ route("/item/:id", ({ id }) => menu({ focus: id }, {}));
 const bar = $("#bar");
 const tabs = $("#tabs");
 const ink = $("#tabs-ink");
+const row = $("#tabs-row");
+const tabEls = $$(".tab", row);
+const foldable = matchMedia("(max-width: 899px)");
 const chip = $("#ci-chip");
 const barTitle = $("#bar-title");
 const back = $("#bar-back");
@@ -46,29 +49,69 @@ $("#bar-mark").innerHTML = MARK;
 $("#bar-word").innerHTML = WORDMARK;
 $("#bag-ico").innerHTML = icon("bag");
 back.innerHTML = icon("chevronL");
-tabs.querySelectorAll(".tab").forEach((tab) => { tab.querySelector(".tab-ico").innerHTML = icon(tab.dataset.tab); });
+tabEls.forEach((tab) => { tab.querySelector(".tab-ico").innerHTML = icon(tab.dataset.tab); });
 
 const TAB_FOR = { "/": "home", "/menu": "menu", "/item": "menu", "/checkin": "checkin", "/branches": "branches", "/profile": "profile", "/bag": null, "/order": null };
 const TITLES = { "/menu": "Menu", "/item": "Menu", "/bag": "Bag", "/order": "Order", "/checkin": "Check in", "/branches": "Branches", "/profile": "You", "/profile/edit": "Edit profile" };
 const titleOf = (p) => TITLES[p] ?? TITLES[rootOf(p)];
 const rootOf = (p) => (p in TAB_FOR ? p : "/" + p.split("/")[1]);
 
-function paintTabs(p) {
-  const key = TAB_FOR[rootOf(p)] ?? null;
-  let active = null;
-  tabs.querySelectorAll(".tab").forEach((tab) => {
-    const on = tab.dataset.tab === key;
-    tab.setAttribute("aria-current", on ? "page" : "false");
-    if (on) active = tab;
-  });
-  if (!active) { ink.style.opacity = "0"; return; }
+let activeTab = null;
+let minimized = false;
+
+/** Put the pill under the current tab, and slide the row so a folded bar shows it. */
+function place() {
+  const on = tabEls.find((t) => t.dataset.tab === activeTab);
+  if (!on) { ink.style.opacity = "0"; tabs.style.setProperty("--row-x", "0px"); return; }
   ink.style.removeProperty("opacity");
-  const box = active.getBoundingClientRect();
-  const host = tabs.getBoundingClientRect();
-  ink.style.width = `${box.width}px`;
-  ink.style.transform = `translateX(${box.left - host.left}px)`;
+  const shift = minimized ? -on.offsetLeft : 0;
+  tabs.style.setProperty("--row-x", `${shift}px`);
+  tabs.style.setProperty("--ink-x", `${on.offsetLeft + shift}px`);
+  tabs.style.setProperty("--ink-w", `${on.offsetWidth}px`);
+  tabs.style.setProperty("--min-w", `${on.offsetWidth}px`);
   tabs.dataset.ready = "1";
 }
+
+function paintTabs(p) {
+  activeTab = TAB_FOR[rootOf(p)] ?? null;
+  tabEls.forEach((t) => t.setAttribute("aria-current", t.dataset.tab === activeTab ? "page" : "false"));
+  place();
+}
+
+/* ----------------------------------------------------------- fold on scroll */
+// Reading down a long page folds the bar to the tab you are on; coming back up,
+// tapping it, or going anywhere opens it again. Phones only — a wide window has
+// the room to keep all five.
+function setMin(on) {
+  if (on === minimized) return;
+  if (on && (!foldable.matches || !activeTab || document.documentElement.scrollHeight - innerHeight < 700)) return;
+  minimized = on;
+  tabs.classList.toggle("min", on);
+  document.documentElement.classList.toggle("nav-min", on);
+  place();
+}
+
+let lastY = scrollY, run = 0;
+function foldOnScroll() {
+  const y = scrollY, dy = y - lastY;
+  lastY = y;
+  if (y < 120) { run = 0; setMin(false); return; }
+  run = Math.sign(dy) === Math.sign(run) ? run + dy : dy;
+  if (run > 48) setMin(true);
+  else if (run < -28) setMin(false);
+}
+
+tabs.addEventListener("click", (e) => {
+  // a folded bar opens on tap instead of navigating
+  if (minimized) { e.preventDefault(); e.stopPropagation(); setMin(false); return; }
+  // the tab you are already on takes you back to the top, as on iOS
+  const t = e.target.closest(".tab");
+  if (t && t.getAttribute("href") === (location.hash.split("?")[0] || "#/")) {
+    e.preventDefault();
+    scrollTo({ top: 0, behavior: "smooth" });
+  }
+}, true);
+tabs.addEventListener("dragstart", (e) => e.preventDefault());
 
 /* ---------------------------------------------------------------- the bag */
 const dock = $("#dock");
@@ -137,13 +180,15 @@ function chrome() {
     bar.classList.toggle("titled", titled);
   });
 }
-addEventListener("scroll", chrome, { passive: true });
-addEventListener("resize", () => { chrome(); paintTabs(path() || "/"); });
+addEventListener("scroll", () => { foldOnScroll(); chrome(); }, { passive: true });
+addEventListener("resize", () => { if (!foldable.matches) setMin(false); chrome(); place(); });
 
 /* ------------------------------------------------------------ after render */
 document.addEventListener("view:rendered", (e) => {
   const p = e.detail.path;
   closeSheet();
+  lastY = scrollY; run = 0;
+  setMin(false);
   paintTabs(p);
   paintBag();
   paintChip();

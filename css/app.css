@@ -75,6 +75,9 @@
   --bar-h: 56px;
   --tabs-h: 62px;
   --tabs-gap: 12px;
+  --tabs-pad: 6px;
+  --tabs-w: min(calc(100vw - 28px), 430px);
+  --ease-fold: cubic-bezier(.32, .72, .3, 1);
   /* what the content must clear at the bottom: the tab bar, its lift, the safe area */
   --clear-b: calc(var(--tabs-h) + var(--tabs-gap) + var(--safe-b) + 28px);
   --ease-out: cubic-bezier(.22, 1, .36, 1);
@@ -159,7 +162,7 @@ h1, h2, h3, h4, p, figure, figcaption { margin: 0; }
 /* ----------------------------------------------------------------- layout */
 .wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 20px; }
 .view { min-height: 100svh; padding-bottom: var(--clear-b); }
-.screen { animation: viewIn .32s var(--ease-out) both; }
+.screen { animation: viewIn .32s var(--ease-out) backwards; }
 .screen.pad-top { padding-top: calc(var(--bar-h) + var(--safe-t) + 8px); }
 .ph { padding: 12px 0 14px; }
 .ph .lt { padding-top: 2px; }
@@ -227,11 +230,19 @@ h1, h2, h3, h4, p, figure, figcaption { margin: 0; }
 /* ---------------------------------------------------------------- tab bar */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: calc(var(--safe-b) + var(--tabs-gap)); z-index: 45;
-  width: min(calc(100% - 28px), 430px); height: var(--tabs-h); margin: 0 auto; padding: 6px;
-  border-radius: 26px; display: grid; grid-template-columns: repeat(5, 1fr); align-items: stretch;
+  width: var(--tabs-w); height: var(--tabs-h); margin: 0 auto; padding: var(--tabs-pad);
+  border-radius: 26px; overflow: hidden;
   background: var(--glass-bg); -webkit-backdrop-filter: var(--glass-strong); backdrop-filter: var(--glass-strong);
   box-shadow: var(--glass-edge), 0 18px 40px -10px rgba(23, 21, 15, .32), 0 2px 8px rgba(23, 21, 15, .06);
-  isolation: isolate;
+  isolation: isolate; transition: width .5s var(--ease-fold);
+}
+/* the row keeps the open bar's width whatever the capsule is doing, so folding clips
+   the tabs instead of squeezing them — and no measurement is ever taken from a
+   shrinking column */
+.tabs-row {
+  position: relative; z-index: 1; height: 100%; display: grid; grid-template-columns: repeat(5, 1fr);
+  width: calc(var(--tabs-w) - var(--tabs-pad) * 2);
+  transform: translateX(var(--row-x, 0px)); transition: transform .5s var(--ease-fold);
 }
 .tabs::after { /* the specular sweep that makes glass read as glass rather than as frosted plastic */
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
@@ -239,14 +250,17 @@ h1, h2, h3, h4, p, figure, figcaption { margin: 0; }
   mix-blend-mode: soft-light; opacity: var(--sheen);
 }
 .tabs-ink {
-  position: absolute; top: 6px; left: 0; height: calc(100% - 12px); width: 0; border-radius: 20px; background: var(--ink);
-  transition: transform .45s var(--ease-spring), width .3s var(--ease-out), opacity .2s; z-index: 0; opacity: 0;
+  position: absolute; top: var(--tabs-pad); left: var(--tabs-pad); height: calc(100% - var(--tabs-pad) * 2);
+  width: var(--ink-w, 0px); border-radius: 20px; background: var(--ink); z-index: 0; opacity: 0;
+  transform: translateX(var(--ink-x, 0px));
+  transition: transform .45s var(--ease-spring), width .3s var(--ease-out), opacity .2s;
   box-shadow: 0 6px 16px -6px rgba(23, 21, 15, .5);
 }
 .tabs[data-ready="1"] .tabs-ink { opacity: 1; }
 .tab {
   position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  border-radius: 20px; color: var(--ink-2); transition: color .25s, transform .18s var(--ease-out); -webkit-user-select: none; user-select: none;
+  border-radius: 20px; color: var(--ink-2); -webkit-user-select: none; user-select: none; -webkit-user-drag: none;
+  transition: color .25s, opacity .3s var(--ease-fold), transform .18s var(--ease-out);
 }
 .tab:active { transform: scale(.93); }
 .tab-ico { width: 24px; height: 24px; display: grid; place-items: center; }
@@ -255,6 +269,12 @@ h1, h2, h3, h4, p, figure, figcaption { margin: 0; }
 .tab[aria-current="page"] { color: var(--paper); }
 .tab[aria-current="page"] .tab-ico { animation: tabPop .45s var(--ease-spring); }
 
+/* folded: the capsule shrinks to the tab you are on, the rest slide out inside it */
+.tabs.min { width: calc(var(--min-w, 74px) + var(--tabs-pad) * 2); }
+.tabs.min .tab:not([aria-current="page"]) { opacity: 0; pointer-events: none; }
+/* the bag's running total goes with it, and comes back on the way up */
+html.nav-min #dock { opacity: 0; transform: translateY(16px) scale(.96); pointer-events: none; }
+
 /* ------------------------------------------------------------------- dock */
 .dock {
   position: fixed; left: 0; right: 0; bottom: calc(var(--safe-b) + var(--tabs-gap) + var(--tabs-h) + 10px); z-index: 44;
@@ -262,7 +282,7 @@ h1, h2, h3, h4, p, figure, figcaption { margin: 0; }
   display: flex; align-items: center; gap: 12px; color: var(--paper);
   background: var(--ink-glass-bg); -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
   box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .18), 0 16px 36px -10px rgba(23, 21, 15, .5);
-  animation: dockIn .45s var(--ease-spring) both;
+  animation: dockIn .45s var(--ease-spring) backwards; transition: opacity .35s, transform .35s var(--ease-fold);
 }
 .dock-n { width: 38px; height: 38px; border-radius: 50%; background: var(--paper); color: var(--ink); display: grid; place-items: center; font: 700 14px/1 var(--sans); flex: none; }
 .dock-t { font: 600 15px/1 var(--sans); }

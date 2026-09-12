@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/bodoni.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/IRANYekanXFaNum-Medium.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=eecc1bd7bf">
+<link rel="stylesheet" href="css/app.css?v=b2a7643b88">
 <script>
   // Before anything paints: the theme the customer chose (or the phone's), whether
   // this is a reload (the logo then shows only briefly), and the scroll offset an
@@ -73,7 +73,7 @@
 <link rel="modulepreload" href="js/views/profile.js">
 <link rel="modulepreload" href="js/wordmark.js">
 <!-- preload:end -->
-<script type="module" src="js/app.js?v=eecc1bd7bf"></script>
+<script type="module" src="js/app.js?v=b2a7643b88"></script>
 </head>
 <body>
 
@@ -117,11 +117,13 @@
 <!-- Five tabs on glass. The pill behind the active one slides. -->
 <nav id="tabs" class="tabs" aria-label="Primary">
   <span class="tabs-ink" id="tabs-ink" aria-hidden="true"></span>
-  <a class="tab" data-tab="home" href="#/"><span class="tab-ico"></span><span class="tab-l">Home</span></a>
-  <a class="tab" data-tab="menu" href="#/menu"><span class="tab-ico"></span><span class="tab-l">Menu</span></a>
-  <a class="tab" data-tab="checkin" href="#/checkin"><span class="tab-ico"></span><span class="tab-l">Check in</span></a>
-  <a class="tab" data-tab="branches" href="#/branches"><span class="tab-ico"></span><span class="tab-l">Branches</span></a>
-  <a class="tab" data-tab="profile" href="#/profile"><span class="tab-ico"></span><span class="tab-l">You</span></a>
+  <div class="tabs-row" id="tabs-row">
+    <a class="tab" data-tab="home" href="#/" draggable="false"><span class="tab-ico"></span><span class="tab-l">Home</span></a>
+    <a class="tab" data-tab="menu" href="#/menu" draggable="false"><span class="tab-ico"></span><span class="tab-l">Menu</span></a>
+    <a class="tab" data-tab="checkin" href="#/checkin" draggable="false"><span class="tab-ico"></span><span class="tab-l">Check in</span></a>
+    <a class="tab" data-tab="branches" href="#/branches" draggable="false"><span class="tab-ico"></span><span class="tab-l">Branches</span></a>
+    <a class="tab" data-tab="profile" href="#/profile" draggable="false"><span class="tab-ico"></span><span class="tab-l">You</span></a>
+  </div>
 </nav>
 
 <div id="sheet-root"></div>
